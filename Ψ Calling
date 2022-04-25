@@ -9,8 +9,8 @@
   # (OPTINAL) check the reads quality with 
     # fastqc *.fastq
 
-  # Data trimming, XX.fastq files work as input to obtain trimmed files ending with XXtrimmed.fastq
-    # for i in 01 02 03 04 05 06 07 08 09 10;do java -jar /(trimmomatic directory)/trimmomatic-0.38.jar SE -phred33 -threads 16 "$i".fastq "$i"trimmed.fastq ILLUMINACLIP:/(adapter directory)/Adapter.fa:2:35:10 HEADCROP:0 LEADING:30 TRAILING:30 SLIDINGWINDOW:6:30 MINLEN:10; done
+  # Data trimming, XX.fastq files work as input to obtain trimmed files ending with XXtrimmed.fastq. Note the parameters can be adjusted based on the results (reads/peaks/depth).
+    # for i in 01 02 03 04 05 06 07 08 09 10;do java -jar /(trimmomatic directory)/trimmomatic-0.38.jar SE -phred33 -threads 16 "$i".fastq "$i"trimmed.fastq ILLUMINACLIP:/(adapter directory)/Adapter.fa:2:35:10 HEADCROP:0 LEADING:30 TRAILING:30 SLIDINGWINDOW:6:30 MINLEN:1; done
  
   # (OPTINAL) check the reads quality with 
     # fastqc *.fastq
