@@ -1,0 +1,48 @@
+#! /bin/sh
+
+  # upload the sequencing files to the remote analysis computer
+    # rsync --partial -avzh --progress --stats ./*.fastq.gz XXXXXX@ip:/home/<yourname>/pseudoseq
+    # gzip -dk *.gz
+  # rename the files from Illumina sequencing with the similar patter. 
+    # mv 01_S1_L001_R1_001.fastq 01.fastq
+    # mv XX_SXX_L001_R1_001.fastq XX.fastq
+  # (OPTINAL) check the reads quality with 
+    # fastqc *.fastq
+
+  # Data trimming, XX.fastq files work as input to obtain trimmed files ending with XXtrimmed.fastq
+    # for i in 01 02 03 04 05 06 07 08 09 10;do java -jar /(trimmomatic directory)/trimmomatic-0.38.jar SE -phred33 -threads 16 "$i".fastq "$i"trimmed.fastq ILLUMINACLIP:/(adapter directory)/Adapter.fa:2:35:10 HEADCROP:0 LEADING:30 TRAILING:30 SLIDINGWINDOW:6:30 MINLEN:10; done
+ 
+  # (OPTINAL) check the reads quality with 
+    # fastqc *.fastq
+ 
+  # Data mapping, XXtrimmed.fastq files work as input to obtain aligned files ending with XX.sam.
+    # for i in 01 02 03 04 05 06 07 08 09 10;do echo "This is for sample "$i""; bowtie2 -x /(index directory)/PANDNA "$i"trimmed.fastq -S "$i".sam; done
+  # Note: index files must be built before running mapping with feeding XX.fa files as source to generate a set of index files namedby XXX. Only first time necessary for the index building.
+    # bowtie2-build xx.fa XXX
+    
+  # Strand selection XX.sam contains both strand of the mapping files, for our purpose, only negative strand is needed. XX.sam files serve as source and negative strand XXpositive.sam is the file needed for next step.
+    # for i in 01 02 03 04 05 06 07 08 09 10; do samtools view -hf16 "$i".sam|sed -E '/AGCGTC|CACATGT/d' > "$i"positive.sam; done
+  # Note: a pipeline with (sed -E '/AGCGTC|CACATGT/d') is incoporated here to remove the possible RNA template brought by RAP ssDNA DNAs, which can be removed if not perform RAP step.
+
+  # Normalization. XXpositve.sam contains stops and other information like depth. First, run a loop to obtain total mapping reads.
+    # for i in 01 02 03 04 05 06 07 08 09 10; do echo "This is for sample "$i": "; samtools view "$i"positive.sam | wc -l ; done
+  # Second, normalized the reads in the same level with following commands. 42 is the seed number which can be changed, but it’s better to keep the same seed for all the normalization. 88 is the percentage calculated to be normalized.
+    # samtools view -hs 42.88 06positive.sam > 06positive88.sam
+  # Third, run below to confirm all the numbers are normalized in the same range
+    # for i in 01 02 03 04 05 06 07 08 09 10; do echo -n "This is for sample "$i": "; samtools view "$i"positive88.sam | wc -l; done
+    
+  # Stop counting. XXpositve88.sam contains stops and will be listed to a csv files with its respective position.
+    # for i in 01 02 03 04 05 06 07 08 09 10 ;do for ((j=1; j<1078; j++)); do echo -n "$j," >> "$i".csv ; awk -v j=$j -F"\t" '{if ($4 == j) {print $10}}' "$i"positive88.sam | wc -l >> "$i".csv ; done; done
+ 
+  # Depth calculation: A combination of build-in functions from samtools are used to generate the depth.txt file.
+    # samtools view -bS 01positive.sam > 01positive.bam #sam to bam convert
+    # samtools sort 01positive.bam -o 01positive.sort.bam #bam file sorting.
+    # samtools depth 01positive.sort.bam > 01positivedepth.txt
+ 
+  # Transfer the remote counting files locally. In your local terminal, type the following commands
+    # rsync --partial -avzh --progress --stats XXXXXX@<ip>:/home/<your directory>/*.csv .
+    # rsync --partial -avzh --progress --stats XXXXXX@<ip>:/home/<your directory>/*.txt .
+    
+  # Plot the data
+    # Copy data from csv files with negative and postive accourdingly to excel file Ψpeaks.xlsx
+    # Copy data from depth files with negative and postive accourdingly to excel file Ψdepth.xlsx
