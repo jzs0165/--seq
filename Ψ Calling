@@ -15,8 +15,8 @@
   # (OPTINAL) check the reads quality with 
     # fastqc *.fastq
  
-  # Data mapping, XXtrimmed.fastq files work as input to obtain aligned files ending with XX.sam.
-    # for i in 01 02 03 04 05 06 07 08 09 10;do echo "This is for sample "$i""; bowtie2 -x /(index directory)/PANDNA "$i"trimmed.fastq -S "$i".sam; done
+  # Data mapping, XXtrimmed.fastq files work as input to obtain aligned files ending with XX.sam. XXX is the name of index files
+    # for i in 01 02 03 04 05 06 07 08 09 10;do echo "This is for sample "$i""; bowtie2 -x /(index directory)/XXX "$i"trimmed.fastq -S "$i".sam; done
   # Note: index files must be built before running mapping with feeding XX.fa files as source to generate a set of index files namedby XXX. Only first time necessary for the index building.
     # bowtie2-build xx.fa XXX
     
