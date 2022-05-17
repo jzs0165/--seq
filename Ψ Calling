@@ -8,13 +8,15 @@
     # mv XX_SXX_L001_R1_001.fastq XX.fastq
   # (OPTINAL) check the reads quality with 
     # fastqc *.fastq
-
+    
+  # We use Trimmomatic (https://github.com/timflutre/trimmomatic) to remove the low quality reads and possible adapter residues.
   # Data trimming, XX.fastq files work as input to obtain trimmed files ending with XXtrimmed.fastq. Note the parameters can be adjusted based on the results (reads/peaks/depth).
-    # for i in 01 02 03 04 05 06 07 08 09 10;do java -jar /(trimmomatic directory)/trimmomatic-0.38.jar SE -phred33 -threads 16 "$i".fastq "$i"trimmed.fastq ILLUMINACLIP:/(adapter directory)/Adapter.fa:2:35:10 HEADCROP:0 LEADING:30 TRAILING:30 SLIDINGWINDOW:6:30 MINLEN:1; done
+    # for i in 01 02 03 04 05 06 07 08 09 10;do java -jar /(trimmomatic directory)/trimmomatic-0.38.jar SE -phred33 -threads 16 "$i".fastq "$i"trimmed.fastq ILLUMINACLIP:/(adapter directory)/Adapter.fa:2:35:10 HEADCROP:0 LEADING:30 TRAILING:30 SLIDINGWINDOW:6:30 MINLEN:10; done
  
-  # (OPTINAL) check the reads quality with 
+  # (OPTINAL) check the reads quality with after trimming.
     # fastqc *.fastq
  
+  # Bowtie2(http://bowtie-bio.sourceforge.net/bowtie2/index.shtml) is the mapping software we used to map our data.
   # Data mapping, XXtrimmed.fastq files work as input to obtain aligned files ending with XX.sam. XXX is the name of index files
     # for i in 01 02 03 04 05 06 07 08 09 10;do echo "This is for sample "$i""; bowtie2 -x /(index directory)/XXX "$i"trimmed.fastq -S "$i".sam; done
   # Note: index files must be built before running mapping with feeding XX.fa files as source to generate a set of index files namedby XXX. Only first time necessary for the index building.
@@ -22,8 +24,9 @@
     
   # Strand selection XX.sam contains both strand of the mapping files, for our purpose, only negative strand is needed. XX.sam files serve as source and negative strand XXpositive.sam is the file needed for next step.
     # for i in 01 02 03 04 05 06 07 08 09 10; do samtools view -hf16 "$i".sam|sed -E '/AGCGTC|CACATGT/d' > "$i"positive.sam; done
-  # Note: a pipeline with (sed -E '/AGCGTC|CACATGT/d') is incoporated here to remove the possible RNA template brought by RAP ssDNA DNAs, which can be removed if not perform RAP step.
-
+  # Note: a pipeline with (sed -E '/AGCGTC|CACATGT/d') is incoporated here to remove the possible RNA template brought by RAP ssDNA DNAs, which can be removed if not perform RAP step, with the following loop.
+    # for i in 01 02 03 04 05 06 07 08 09 10; do samtools view -hf16 "$i".sam > "$i"positive.sam; done
+    
   # Normalization. XXpositve.sam contains stops and other information like depth. First, run a loop to obtain total mapping reads.
     # for i in 01 02 03 04 05 06 07 08 09 10; do echo "This is for sample "$i": "; samtools view "$i"positive.sam | wc -l ; done
   # Second, normalized the reads in the same level with following commands. 42 is the seed number which can be changed, but it’s better to keep the same seed for all the normalization. 88 is the percentage calculated to be normalized.
